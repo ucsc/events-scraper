@@ -147,6 +147,33 @@ class Scraper(object):
 
         return dates_list
 
+    def scrape_event(self, body):
+        """
+        Scrapes an event soup and returns an Event Object
+        :param body: a bs4 soup representing the event html page
+        :return:
+        """
+
+        content = body.find('div', {'id': 'main-content'})
+
+        title = self.get_title(body)
+        description = self.get_description(content)
+        location = self.get_location(content)
+        location_details = self.get_location_details(content)
+        admission = self.get_admission(content)
+        admission_details = self.get_admission_details(content)
+        sponsor = self.get_sponsor(content)
+        related_url = self.get_related_url(content)
+        invited_audience = self.get_invited_audience(content)
+        category = self.get_category(content)
+        images = self.get_images(content)
+        dates = self.get_dates(content)
+
+        event = Event(title, description, location, location_details, admission,
+                      admission_details, sponsor, related_url, invited_audience, category, images, dates)
+
+        return event
+
 
 class Event(object):
     """
@@ -173,6 +200,14 @@ class Event(object):
         self.images = images
         self.dates = dates
 
+    def __str__(self):
+        return "Event:\n  title: %s\n  description: %s\n  location: %s\n  location details: %s\n" \
+               "  admission: %s\n  admission details: %s\n  sponsor: %s\n  related url: %s\n" \
+               "  invited audience: %s\n  category: %s\n  images: %s\n  dates: %s\n" \
+               % (self.title, self.description, self.location, self.location_details, self.admission,
+                  self.admission_details, self.sponsor, self.related_url, self.invited_audience,
+                  self.category, str(self.images), str(self.dates))
+
 
 def get_soup_from_url(page_url):
         """
@@ -191,4 +226,4 @@ def get_soup_from_url(page_url):
 
 soup = get_soup_from_url('http://dev-ucscevents.pantheonsite.io/event/3710')
 
-content = soup.find('div', {'id': 'main-content'})
+
