@@ -226,4 +226,8 @@ def get_soup_from_url(page_url):
 
 soup = get_soup_from_url('http://dev-ucscevents.pantheonsite.io/event/3710')
 
+scraper = Scraper()
+event = scraper.scrape_event(soup)
+print event
+
 
