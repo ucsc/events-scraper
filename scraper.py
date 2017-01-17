@@ -7,6 +7,146 @@ class Scraper(object):
     Class to scrape a UCSC event
     """
 
+    def _get_group_items(self, main_content, class_name):
+        """
+
+        :param main_content:
+        :param class_name:
+        :return:
+        """
+        container = main_content.find('div', {'class': class_name})
+
+        div = container.find('div', {'class': 'field-items'})
+
+        items = div.find_all('div')
+
+        items_string = ''
+
+        for item in items:
+            for content in item.contents:
+                items_string += str(content)
+
+        return items_string
+
+    def get_title(self, body):
+        """
+
+        :param soup:
+        :return:
+        """
+        container = body.find('div', {'class': 'grid_9 push_3'})
+
+        return container.find('h1', {'id': 'title'}).get_text()
+
+    def get_description(self, main_content):
+        """
+        Scrapes the Description
+        :param main_content:
+        :return:
+        """
+        return self._get_group_items(main_content,
+                                     'field field-name-body field-type-text-with-summary field-label-above')
+
+    def get_location(self, main_content):
+        """
+        Scrapes the event location
+        :param main_content:
+        :return:
+        """
+        return self._get_group_items(main_content, 'field field-name-field-event-location '
+                                                   'field-type-entityreference field-label-inline clearfix')
+
+    def get_location_details(self, main_content):
+        """
+        Scrapes the event location details
+        :param main_content:
+        :return:
+        """
+        return self._get_group_items(main_content, 'field field-name-field-event-location-details '
+                                                   'field-type-text-long field-label-above')
+
+    def get_admission(self, main_content):
+        """
+        Scrapes the event admission
+        :param main_content:
+        :return:
+        """
+        return self._get_group_items(main_content, 'field field-name-field-admission '
+                                                   'field-type-taxonomy-term-reference field-label-inline clearfix')
+
+    def get_admission_details(self, main_content):
+        """
+        Scrapes the event admission details
+        :param main_content:
+        :return:
+        """
+        return self._get_group_items(main_content, 'field field-name-field-admission-details '
+                                                   'field-type-text-long field-label-above')
+
+    def get_sponsor(self, main_content):
+        """
+        Scrapes the event sponor
+        :param main_content:
+        :return:
+        """
+        return self._get_group_items(main_content, 'field field-name-field-event-affiliation '
+                                                   'field-type-taxonomy-term-reference field-label-inline clearfix')
+
+    def get_related_url(self, main_content):
+        """
+        Scrapes the event related URL
+        :param main_content:
+        :return:
+        """
+        return self._get_group_items(main_content, 'field field-name-field-related-url '
+                                                   'field-type-link-field field-label-inline clearfix')
+
+    def get_invited_audience(self, main_content):
+        """
+        Scrapes the event invited audience
+        :param main_content:
+        :return:
+        """
+        return self._get_group_items(main_content, 'field field-name-field-audience '
+                                                   'field-type-taxonomy-term-reference field-label-inline clearfix')
+
+    def get_category(self, main_content):
+        """
+        Scrapes the event category
+        :param main_content:
+        :return:
+        """
+        return self._get_group_items(main_content, 'field field-name-field-event-type '
+                                                   'field-type-taxonomy-term-reference field-label-inline clearfix')
+
+    def get_images(self, main_content):
+        container = main_content.find('div', {'class': 'field field-name-field-event-image field-type-image '
+                                                       'field-label-hidden'})
+
+        div = container.find('div', {'class': 'field-items'})
+
+        images = div.find_all('img')
+
+        images_list = []
+
+        for image in images:
+            images_list.append(str(image['src']))
+
+        return images_list
+
+    def get_dates(self, main_content):
+        container = main_content.find('div', {'class': 'field field-name-field-datetime field-type-datestamp '
+                                                       'field-label-above'})
+
+        date_spans = container.find_all('span', {'class': 'date-display-single'})
+
+        dates_list = []
+
+        for date_span in date_spans:
+            dates_list.append(date_span['content'])
+
+        return dates_list
+
 
 class Event(object):
     """
@@ -48,126 +188,7 @@ def get_soup_from_url(page_url):
         return BeautifulSoup(r.content, 'lxml')
 
 
-def get_group_items(main_content, class_name):
-    """
-
-    :param main_content:
-    :param class_name:
-    :return:
-    """
-    container = main_content.find('div', {'class': class_name})
-
-    div = container.find('div', {'class': 'field-items'})
-
-    items = div.find_all('div')
-
-    items_string = ''
-
-    for item in items:
-        for content in item.contents:
-            items_string += str(content)
-
-    return items_string
-
-
-def get_title(body):
-    """
-
-    :param soup:
-    :return:
-    """
-    container = body.find('div', {'class': 'grid_9 push_3'})
-
-    return container.find('h1', {'id': 'title'}).get_text()
-
-
-def get_image(main_content):
-    container = main_content.find('div', {'class': 'field field-name-field-event-image field-type-image '
-                                                   'field-label-hidden'})
-
-    div = container.find('div', {'class': 'field-items'})
-
-    images = div.find_all('img')
-
-    images_string = ''
-
-    for image in images:
-        images_string += str(image['src'])
-
-    return images_string
-
-def get_dates(main_content):
-    container = main_content.find('div', {'class': 'field field-name-field-datetime field-type-datestamp '
-                                                   'field-label-above'})
-
-    date_spans = container.find_all('span', {'class': 'date-display-single'})
-
-    dates_list = []
-
-    for date_span in date_spans:
-        dates_list.append(date_span['content'])
-
-    return dates_list
-
 
 soup = get_soup_from_url('http://dev-ucscevents.pantheonsite.io/event/3710')
 
 content = soup.find('div', {'id': 'main-content'})
-
-title = get_title(soup)
-
-description = get_group_items(content, 'field field-name-body field-type-text-with-summary field-label-above')
-
-location = get_group_items(content, 'field field-name-field-event-location '
-                                    'field-type-entityreference field-label-inline clearfix')
-
-location_details = get_group_items(content, 'field field-name-field-event-location-details '
-                                            'field-type-text-long field-label-above')
-
-admission = get_group_items(content, 'field field-name-field-admission field-type-taxonomy-term-reference '
-                                     'field-label-inline clearfix')
-
-admission_details = get_group_items(content, 'field field-name-field-admission-details '
-                                             'field-type-text-long field-label-above')
-
-sponsor = get_group_items(content, 'field field-name-field-event-affiliation field-type-taxonomy-term-reference '
-                                   'field-label-inline clearfix')
-
-related_url = get_group_items(content, 'field field-name-field-related-url '
-                                       'field-type-link-field field-label-inline clearfix')
-
-invited_audience = get_group_items(content, 'field field-name-field-audience field-type-taxonomy-term-reference '
-                                            'field-label-inline clearfix')
-
-category = get_group_items(content, 'field field-name-field-event-type field-type-taxonomy-term-reference '
-                                    'field-label-inline clearfix')
-
-image = get_image(content)
-
-dates = get_dates(content)
-
-"""
-print(description)
-print('++++++')
-print(location)
-print('+++++')
-print(location_details)
-print('+++++')
-print(admission)
-print('+++++')
-print(admission_details)
-print('+++++')
-print(sponsor)
-print('+++++')
-print(related_url)
-print('+++++')
-print(invited_audience)
-print('+++++')
-print(category)
-print('+++++')
-print(title)
-print('+++++')
-print(image)
-print('+++++')
-print(dates)
-"""
