@@ -20,9 +20,17 @@ class Scraper(object):
 
         items = div.find_all('div')
 
+        return items
+
+    def get_group_items_str(self, group_items):
+        """
+        Converts group items to a string
+        :param group_items:
+        :return:
+        """
         items_string = ''
 
-        for item in items:
+        for item in group_items:
             for content in item.contents:
                 items_string += str(content)
 
@@ -44,8 +52,9 @@ class Scraper(object):
         :param main_content:
         :return:
         """
-        return self._get_group_items(main_content,
-                                     'field field-name-body field-type-text-with-summary field-label-above')
+        group_items = self._get_group_items(main_content,
+                                            'field field-name-body field-type-text-with-summary field-label-above')
+        return self.get_group_items_str(group_items)
 
     def get_location(self, main_content):
         """
@@ -53,8 +62,9 @@ class Scraper(object):
         :param main_content:
         :return:
         """
-        return self._get_group_items(main_content, 'field field-name-field-event-location '
-                                                   'field-type-entityreference field-label-inline clearfix')
+        group_items = self._get_group_items(main_content, 'field field-name-field-event-location '
+                                                          'field-type-entityreference field-label-inline clearfix')
+        return self.get_group_items_str(group_items)
 
     def get_location_details(self, main_content):
         """
@@ -62,8 +72,9 @@ class Scraper(object):
         :param main_content:
         :return:
         """
-        return self._get_group_items(main_content, 'field field-name-field-event-location-details '
-                                                   'field-type-text-long field-label-above')
+        group_items = self._get_group_items(main_content, 'field field-name-field-event-location-details '
+                                                          'field-type-text-long field-label-above')
+        return self.get_group_items_str(group_items)
 
     def get_admission(self, main_content):
         """
@@ -71,8 +82,9 @@ class Scraper(object):
         :param main_content:
         :return:
         """
-        return self._get_group_items(main_content, 'field field-name-field-admission '
-                                                   'field-type-taxonomy-term-reference field-label-inline clearfix')
+        group_items = self._get_group_items(main_content, 'field field-name-field-admission field-type-'
+                                                          'taxonomy-term-reference field-label-inline clearfix')
+        return self.get_group_items_str(group_items)
 
     def get_admission_details(self, main_content):
         """
@@ -80,8 +92,9 @@ class Scraper(object):
         :param main_content:
         :return:
         """
-        return self._get_group_items(main_content, 'field field-name-field-admission-details '
-                                                   'field-type-text-long field-label-above')
+        group_items = self._get_group_items(main_content, 'field field-name-field-admission-details '
+                                                          'field-type-text-long field-label-above')
+        return self.get_group_items_str(group_items)
 
     def get_sponsor(self, main_content):
         """
@@ -89,8 +102,9 @@ class Scraper(object):
         :param main_content:
         :return:
         """
-        return self._get_group_items(main_content, 'field field-name-field-event-affiliation '
-                                                   'field-type-taxonomy-term-reference field-label-inline clearfix')
+        group_items = self._get_group_items(main_content, 'field field-name-field-event-affiliation field-type-'
+                                                          'taxonomy-term-reference field-label-inline clearfix')
+        return self.get_group_items_str(group_items)
 
     def get_related_url(self, main_content):
         """
@@ -101,14 +115,16 @@ class Scraper(object):
         return self._get_group_items(main_content, 'field field-name-field-related-url '
                                                    'field-type-link-field field-label-inline clearfix')
 
+
     def get_invited_audience(self, main_content):
         """
         Scrapes the event invited audience
         :param main_content:
         :return:
         """
-        return self._get_group_items(main_content, 'field field-name-field-audience '
-                                                   'field-type-taxonomy-term-reference field-label-inline clearfix')
+        group_items = self._get_group_items(main_content, 'field field-name-field-audience field-type-'
+                                                          'taxonomy-term-reference field-label-inline clearfix')
+        return self.get_group_items_str(group_items)
 
     def get_category(self, main_content):
         """
@@ -116,10 +132,11 @@ class Scraper(object):
         :param main_content:
         :return:
         """
-        return self._get_group_items(main_content, 'field field-name-field-event-type '
-                                                   'field-type-taxonomy-term-reference field-label-inline clearfix')
+        group_items = self._get_group_items(main_content, 'field field-name-field-event-type field-type-'
+                                                          'taxonomy-term-reference field-label-inline clearfix')
+        return self.get_group_items_str(group_items)
 
-    def get_images(self, main_content):
+    def get_image(self, main_content):
         container = main_content.find('div', {'class': 'field field-name-field-event-image field-type-image '
                                                        'field-label-hidden'})
 
@@ -127,12 +144,7 @@ class Scraper(object):
 
         images = div.find_all('img')
 
-        images_list = []
-
-        for image in images:
-            images_list.append(str(image['src']))
-
-        return images_list
+        return str(images[0]['src'])
 
     def get_dates(self, main_content):
         container = main_content.find('div', {'class': 'field field-name-field-datetime field-type-datestamp '
@@ -166,11 +178,11 @@ class Scraper(object):
         related_url = self.get_related_url(content)
         invited_audience = self.get_invited_audience(content)
         category = self.get_category(content)
-        images = self.get_images(content)
+        image = self.get_image(content)
         dates = self.get_dates(content)
 
         event = Event(title, description, location, location_details, admission,
-                      admission_details, sponsor, related_url, invited_audience, category, images, dates)
+                      admission_details, sponsor, related_url, invited_audience, category, image, dates)
 
         return event
 
@@ -183,7 +195,7 @@ class Event(object):
     def __init__(self, title, description, location,
                  location_details, admission, admission_details,
                  sponsor, related_url, invited_audience,
-                 category, images, dates):
+                 category, image, dates):
         """
         Initialize a new Event Object
         """
@@ -197,16 +209,16 @@ class Event(object):
         self.related_url = related_url
         self.invited_audience = invited_audience
         self.category = category
-        self.images = images
+        self.image = image
         self.dates = dates
 
     def __str__(self):
         return "Event:\n  title: %s\n  description: %s\n  location: %s\n  location details: %s\n" \
                "  admission: %s\n  admission details: %s\n  sponsor: %s\n  related url: %s\n" \
-               "  invited audience: %s\n  category: %s\n  images: %s\n  dates: %s\n" \
+               "  invited audience: %s\n  category: %s\n  image: %s\n  dates: %s\n" \
                % (self.title, self.description, self.location, self.location_details, self.admission,
                   self.admission_details, self.sponsor, self.related_url, self.invited_audience,
-                  self.category, str(self.images), str(self.dates))
+                  self.category, self.image, str(self.dates))
 
 
 def get_soup_from_url(page_url):
@@ -225,9 +237,9 @@ def get_soup_from_url(page_url):
 
 
 soup = get_soup_from_url('http://dev-ucscevents.pantheonsite.io/event/3710')
-
+body_content = soup.find('div', {'id': 'main-content'})
 scraper = Scraper()
-event = scraper.scrape_event(soup)
+event = scraper.get_related_url(body_content)
 print event
 
 
