@@ -116,9 +116,10 @@ class Scraper(object):
                                                           'field-type-link-field field-label-inline clearfix')
         url = ""
 
-        if len(group_items) > 0
-            item = group_items[0]
-            url = str(group_items['href'])
+        if len(group_items) > 0:
+            item = group_items[0].find('a')
+            if item is not None:
+                url = str(item['href'])
 
         return url
 
