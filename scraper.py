@@ -2,6 +2,14 @@ from bs4 import BeautifulSoup
 import requests
 
 
+class Writer(object):
+    """
+    Class to write event(s) to csv with or without column names
+    """
+
+    def __init__(self):
+
+
 class Scraper(object):
     """
     Class to scrape a UCSC event
@@ -246,7 +254,7 @@ def get_soup_from_url(page_url):
 soup = get_soup_from_url('http://dev-ucscevents.pantheonsite.io/event/3710')
 body_content = soup.find('div', {'id': 'main-content'})
 scraper = Scraper()
-event = scraper.get_related_url(body_content)
+event = scraper.scrape_event(soup)
 print event
 
 
