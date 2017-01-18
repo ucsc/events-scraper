@@ -112,9 +112,15 @@ class Scraper(object):
         :param main_content:
         :return:
         """
-        return self._get_group_items(main_content, 'field field-name-field-related-url '
-                                                   'field-type-link-field field-label-inline clearfix')
+        group_items = self._get_group_items(main_content, 'field field-name-field-related-url '
+                                                          'field-type-link-field field-label-inline clearfix')
+        url = ""
 
+        if len(group_items) > 0
+            item = group_items[0]
+            url = str(group_items['href'])
+
+        return url
 
     def get_invited_audience(self, main_content):
         """
