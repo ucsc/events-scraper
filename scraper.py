@@ -8,10 +8,23 @@ class Writer(object):
     Class to write event(s) to csv with or without column names
     """
 
-    def __init__(self):
+    def __init__(self, columns):
+        self.columns = columns
+
+    def write(self, event_dict):
         """
 
+        :param event_dict:
+        :return:
         """
+        event_string = ""
+        for column in self.columns:
+            if column in event_dict:
+                event_string += event_dict[column] + ','
+            else:
+                event_string += ','
+
+        print event_string
 
 class Scraper(object):
     """
@@ -47,6 +60,20 @@ class Scraper(object):
         for item in group_items:
             for content in item.contents:
                 items_string += str(content)
+
+        return items_string
+
+    def scrape_group_items_text(self, group_items):
+        """
+        Extracts text from group items html
+        :param group_items:
+        :return:
+        """
+        items_string = ''
+
+        for item in group_items:
+            for content in item.contents:
+                items_string += content.text + "\n"
 
         return items_string
 
@@ -118,7 +145,7 @@ class Scraper(object):
         """
         group_items = self._scrape_group_items(main_content, 'field field-name-field-event-affiliation field-type-'
                                                           'taxonomy-term-reference field-label-inline clearfix')
-        return self.scrape_group_items_str(group_items)
+        return self.scrape_group_items_text(group_items)
 
     def scrape_related_url(self, main_content):
         """
@@ -145,7 +172,7 @@ class Scraper(object):
         """
         group_items = self._scrape_group_items(main_content, 'field field-name-field-audience field-type-'
                                                           'taxonomy-term-reference field-label-inline clearfix')
-        return self.scrape_group_items_str(group_items)
+        return self.scrape_group_items_text(group_items)
 
     def scrape_category(self, main_content):
         """
@@ -238,9 +265,6 @@ class Scraper(object):
         for date_time in date_times:
             date, time = self.date_time_to_tuple(date_time)
             full_description = self.combine_description(description, location_details, admission_details)
-            print description + '\n'
-            print location_details + '\n'
-            print admission_details + '\n'
             event_dict = {
                 'Title': title,
                 "Description": full_description,
@@ -249,7 +273,7 @@ class Scraper(object):
                 'Location': location,
                 'Cost': admission,
                 'Event Website': related_url,
-                'Photo Url': image,
+                'Photo URL': image,
                 "Sponsored": sponsor,
                 "Invited Audience": invited_audience
             }
@@ -276,10 +300,20 @@ def get_soup_from_url(page_url):
 soup = get_soup_from_url('http://dev-ucscevents.pantheonsite.io/event/3710')
 body_content = soup.find('div', {'id': 'main-content'})
 scraper = Scraper()
-event = scraper.scrape_event(soup)
+events = scraper.scrape_event(soup)
+
+column_titles = ['Title','Description','Date From','Date To','Recurrence','Start Time','End Time',
+           'Location','Address','City','State','Event Website','Room','Keywords','Tags',
+           'Photo URL','Ticket URL','Cost','Hashtag','Facebook URL','Group','Department',
+           'Allow User Activity','Allow User Attendance','Visibility','Featured Tabs',
+           'Sponsored','Venue Page Only','Exclude From Trending','Event Types','Invited Audience']
+
+writer = Writer(column_titles)
 
 import pprint
 pp = pprint.PrettyPrinter(indent=4)
-pp.pprint(event)
+# pp.pprint(events[0])
+
+writer.write(events[0])
 
 
