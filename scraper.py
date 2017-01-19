@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
 import requests
+import re
 
 
 class Writer(object):
@@ -8,14 +9,19 @@ class Writer(object):
     """
 
     def __init__(self):
+        """
 
+        """
 
 class Scraper(object):
     """
     Class to scrape a UCSC event
     """
 
-    def _get_group_items(self, main_content, class_name):
+    def __init__(self):
+        self.date_regex = re.compile(r'(^\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}).*')
+
+    def _scrape_group_items(self, main_content, class_name):
         """
 
         :param main_content:
@@ -30,7 +36,7 @@ class Scraper(object):
 
         return items
 
-    def get_group_items_str(self, group_items):
+    def scrape_group_items_str(self, group_items):
         """
         Converts group items to a string
         :param group_items:
@@ -44,7 +50,7 @@ class Scraper(object):
 
         return items_string
 
-    def get_title(self, body):
+    def scrape_title(self, body):
         """
 
         :param soup:
@@ -54,73 +60,73 @@ class Scraper(object):
 
         return container.find('h1', {'id': 'title'}).get_text()
 
-    def get_description(self, main_content):
+    def scrape_description(self, main_content):
         """
         Scrapes the Description
         :param main_content:
         :return:
         """
-        group_items = self._get_group_items(main_content,
+        group_items = self._scrape_group_items(main_content,
                                             'field field-name-body field-type-text-with-summary field-label-above')
-        return self.get_group_items_str(group_items)
+        return self.scrape_group_items_str(group_items)
 
-    def get_location(self, main_content):
+    def scrape_location(self, main_content):
         """
         Scrapes the event location
         :param main_content:
         :return:
         """
-        group_items = self._get_group_items(main_content, 'field field-name-field-event-location '
+        group_items = self._scrape_group_items(main_content, 'field field-name-field-event-location '
                                                           'field-type-entityreference field-label-inline clearfix')
-        return self.get_group_items_str(group_items)
+        return self.scrape_group_items_str(group_items)
 
-    def get_location_details(self, main_content):
+    def scrape_location_details(self, main_content):
         """
         Scrapes the event location details
         :param main_content:
         :return:
         """
-        group_items = self._get_group_items(main_content, 'field field-name-field-event-location-details '
+        group_items = self._scrape_group_items(main_content, 'field field-name-field-event-location-details '
                                                           'field-type-text-long field-label-above')
-        return self.get_group_items_str(group_items)
+        return self.scrape_group_items_str(group_items)
 
-    def get_admission(self, main_content):
+    def scrape_admission(self, main_content):
         """
         Scrapes the event admission
         :param main_content:
         :return:
         """
-        group_items = self._get_group_items(main_content, 'field field-name-field-admission field-type-'
+        group_items = self._scrape_group_items(main_content, 'field field-name-field-admission field-type-'
                                                           'taxonomy-term-reference field-label-inline clearfix')
-        return self.get_group_items_str(group_items)
+        return self.scrape_group_items_str(group_items)
 
-    def get_admission_details(self, main_content):
+    def scrape_admission_details(self, main_content):
         """
         Scrapes the event admission details
         :param main_content:
         :return:
         """
-        group_items = self._get_group_items(main_content, 'field field-name-field-admission-details '
+        group_items = self._scrape_group_items(main_content, 'field field-name-field-admission-details '
                                                           'field-type-text-long field-label-above')
-        return self.get_group_items_str(group_items)
+        return self.scrape_group_items_str(group_items)
 
-    def get_sponsor(self, main_content):
+    def scrape_sponsor(self, main_content):
         """
         Scrapes the event sponor
         :param main_content:
         :return:
         """
-        group_items = self._get_group_items(main_content, 'field field-name-field-event-affiliation field-type-'
+        group_items = self._scrape_group_items(main_content, 'field field-name-field-event-affiliation field-type-'
                                                           'taxonomy-term-reference field-label-inline clearfix')
-        return self.get_group_items_str(group_items)
+        return self.scrape_group_items_str(group_items)
 
-    def get_related_url(self, main_content):
+    def scrape_related_url(self, main_content):
         """
         Scrapes the event related URL
         :param main_content:
         :return:
         """
-        group_items = self._get_group_items(main_content, 'field field-name-field-related-url '
+        group_items = self._scrape_group_items(main_content, 'field field-name-field-related-url '
                                                           'field-type-link-field field-label-inline clearfix')
         url = ""
 
@@ -131,27 +137,27 @@ class Scraper(object):
 
         return url
 
-    def get_invited_audience(self, main_content):
+    def scrape_invited_audience(self, main_content):
         """
         Scrapes the event invited audience
         :param main_content:
         :return:
         """
-        group_items = self._get_group_items(main_content, 'field field-name-field-audience field-type-'
+        group_items = self._scrape_group_items(main_content, 'field field-name-field-audience field-type-'
                                                           'taxonomy-term-reference field-label-inline clearfix')
-        return self.get_group_items_str(group_items)
+        return self.scrape_group_items_str(group_items)
 
-    def get_category(self, main_content):
+    def scrape_category(self, main_content):
         """
         Scrapes the event category
         :param main_content:
         :return:
         """
-        group_items = self._get_group_items(main_content, 'field field-name-field-event-type field-type-'
+        group_items = self._scrape_group_items(main_content, 'field field-name-field-event-type field-type-'
                                                           'taxonomy-term-reference field-label-inline clearfix')
-        return self.get_group_items_str(group_items)
+        return self.scrape_group_items_str(group_items)
 
-    def get_image(self, main_content):
+    def scrape_image(self, main_content):
         container = main_content.find('div', {'class': 'field field-name-field-event-image field-type-image '
                                                        'field-label-hidden'})
 
@@ -161,7 +167,7 @@ class Scraper(object):
 
         return str(images[0]['src'])
 
-    def get_dates(self, main_content):
+    def scrape_dates(self, main_content):
         container = main_content.find('div', {'class': 'field field-name-field-datetime field-type-datestamp '
                                                        'field-label-above'})
 
@@ -174,6 +180,37 @@ class Scraper(object):
 
         return dates_list
 
+    def date_time_to_tuple(self, date_time):
+        """
+        Converts a date time iso8601 string from a ucsc event to a tuple of the start time and date with
+        the form 2016-06-04T11:00:00-07:00
+        :param date_time:
+        :return:
+        """
+        result = self.date_regex.findall(date_time)
+        return result[0]
+
+    def combine_description(self, description, location_details, admission_details):
+        """
+        Combines the description, location details, and admission details into one string
+        :param description:
+        :param location_details:
+        :param admission_details:
+        :return:
+        """
+
+        return_string = description
+
+        return_string += "<h2>Location Details</h2>"
+
+        return_string += location_details
+
+        return_string += '<h2>Admission Details</h2>'
+
+        return_string += admission_details
+
+        return return_string
+
     def scrape_event(self, body):
         """
         Scrapes an event soup and returns an Event Object
@@ -183,57 +220,42 @@ class Scraper(object):
 
         content = body.find('div', {'id': 'main-content'})
 
-        title = self.get_title(body)
-        description = self.get_description(content)
-        location = self.get_location(content)
-        location_details = self.get_location_details(content)
-        admission = self.get_admission(content)
-        admission_details = self.get_admission_details(content)
-        sponsor = self.get_sponsor(content)
-        related_url = self.get_related_url(content)
-        invited_audience = self.get_invited_audience(content)
-        category = self.get_category(content)
-        image = self.get_image(content)
-        dates = self.get_dates(content)
+        title = self.scrape_title(body)
+        description = self.scrape_description(content)
+        location = self.scrape_location(content)
+        location_details = self.scrape_location_details(content)
+        admission = self.scrape_admission(content)
+        admission_details = self.scrape_admission_details(content)
+        sponsor = self.scrape_sponsor(content)
+        related_url = self.scrape_related_url(content)
+        invited_audience = self.scrape_invited_audience(content)
+        category = self.scrape_category(content)
+        image = self.scrape_image(content)
+        date_times = self.scrape_dates(content)
 
-        event = Event(title, description, location, location_details, admission,
-                      admission_details, sponsor, related_url, invited_audience, category, image, dates)
+        event_list = []
 
-        return event
+        for date_time in date_times:
+            date, time = self.date_time_to_tuple(date_time)
+            full_description = self.combine_description(description, location_details, admission_details)
+            print description + '\n'
+            print location_details + '\n'
+            print admission_details + '\n'
+            event_dict = {
+                'Title': title,
+                "Description": full_description,
+                'Date From': date,
+                'Start Time': time,
+                'Location': location,
+                'Cost': admission,
+                'Event Website': related_url,
+                'Photo Url': image,
+                "Sponsored": sponsor,
+                "Invited Audience": invited_audience
+            }
+            event_list.append(event_dict)
+        return event_list
 
-
-class Event(object):
-    """
-    Object that represents a UCSC format Event
-    """
-
-    def __init__(self, title, description, location,
-                 location_details, admission, admission_details,
-                 sponsor, related_url, invited_audience,
-                 category, image, dates):
-        """
-        Initialize a new Event Object
-        """
-        self.title = title
-        self.description = description
-        self.location = location
-        self.location_details = location_details
-        self.admission = admission
-        self.admission_details = admission_details
-        self.sponsor = sponsor
-        self.related_url = related_url
-        self.invited_audience = invited_audience
-        self.category = category
-        self.image = image
-        self.dates = dates
-
-    def __str__(self):
-        return "Event:\n  title: %s\n  description: %s\n  location: %s\n  location details: %s\n" \
-               "  admission: %s\n  admission details: %s\n  sponsor: %s\n  related url: %s\n" \
-               "  invited audience: %s\n  category: %s\n  image: %s\n  dates: %s\n" \
-               % (self.title, self.description, self.location, self.location_details, self.admission,
-                  self.admission_details, self.sponsor, self.related_url, self.invited_audience,
-                  self.category, self.image, str(self.dates))
 
 
 def get_soup_from_url(page_url):
@@ -255,6 +277,9 @@ soup = get_soup_from_url('http://dev-ucscevents.pantheonsite.io/event/3710')
 body_content = soup.find('div', {'id': 'main-content'})
 scraper = Scraper()
 event = scraper.scrape_event(soup)
-print event
+
+import pprint
+pp = pprint.PrettyPrinter(indent=4)
+pp.pprint(event)
 
 
