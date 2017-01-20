@@ -24,7 +24,7 @@ class Writer(object):
             else:
                 event_string += ','
 
-        print event_string
+        print(event_string)
 
 class Scraper(object):
     """
@@ -71,9 +71,16 @@ class Scraper(object):
         """
         items_string = ''
 
-        for item in group_items:
-            for content in item.contents:
-                items_string += content.text + "\n"
+        for i in xrange(len(group_items) - 1):
+            for content in group_items[i].contents:
+                items_string += content.text + ', '
+
+        last_item = group_items[len(group_items) - 1]
+
+        for x in xrange(len(last_item.contents) - 1):
+            items_string += last_item.contents[x].text + ', '
+
+        items_string += last_item.contents[len(last_item.contents) - 1].text
 
         return items_string
 
@@ -145,7 +152,11 @@ class Scraper(object):
         """
         group_items = self._scrape_group_items(main_content, 'field field-name-field-event-affiliation field-type-'
                                                           'taxonomy-term-reference field-label-inline clearfix')
-        return self.scrape_group_items_text(group_items)
+        sponsor_string = self.scrape_group_items_text(group_items)
+
+        sponsor_string = self.csv_quote_escape(sponsor_string)
+
+        return sponsor_string
 
     def scrape_related_url(self, main_content):
         """
@@ -172,7 +183,11 @@ class Scraper(object):
         """
         group_items = self._scrape_group_items(main_content, 'field field-name-field-audience field-type-'
                                                           'taxonomy-term-reference field-label-inline clearfix')
-        return self.scrape_group_items_text(group_items)
+        audience_string =  self.scrape_group_items_text(group_items)
+
+        audience_string = self.csv_quote_escape(audience_string)
+
+        return audience_string
 
     def scrape_category(self, main_content):
         """
@@ -217,6 +232,18 @@ class Scraper(object):
         result = self.date_regex.findall(date_time)
         return result[0]
 
+    def csv_quote_escape(self, the_string):
+        """
+        replaces " with \" and places quotes aroudn the string
+        :param the_string:
+        :return:
+        """
+        the_string.replace('"', r'\"')
+
+        the_string = "\"" + the_string + "\""
+
+        return the_string
+
     def combine_description(self, description, location_details, admission_details):
         """
         Combines the description, location details, and admission details into one string
@@ -235,6 +262,8 @@ class Scraper(object):
         return_string += '<h2>Admission Details</h2>'
 
         return_string += admission_details
+
+        return_string = self.csv_quote_escape(return_string)
 
         return return_string
 
