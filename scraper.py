@@ -8,10 +8,21 @@ class Writer(object):
     Class to write event(s) to csv with or without column names
     """
 
-    def __init__(self, columns):
+    def __init__(self, columns, out):
         self.columns = columns
+        self.out = out
 
-    def write(self, event_dict):
+    def write_headers(self):
+        """
+        Writes the column headers
+        :return:
+        """
+        for header in self.columns:
+            self.out.write(str(header) + ',')
+
+        self.out.write('\n')
+
+    def write_event(self, event_dict):
         """
 
         :param event_dict:
@@ -24,7 +35,9 @@ class Writer(object):
             else:
                 event_string += ','
 
-        print(event_string)
+        event_string += "\n"
+
+        self.out.write(event_string)
 
 class Scraper(object):
     """
@@ -61,6 +74,8 @@ class Scraper(object):
             for content in item.contents:
                 items_string += str(content)
 
+        items_string = self.remove_newlines(items_string)
+
         return items_string
 
     def scrape_group_items_text(self, group_items):
@@ -81,6 +96,7 @@ class Scraper(object):
             items_string += last_item.contents[x].text + ', '
 
         items_string += last_item.contents[len(last_item.contents) - 1].text
+        items_string = self.remove_newlines(items_string)
 
         return items_string
 
@@ -238,10 +254,19 @@ class Scraper(object):
         :param the_string:
         :return:
         """
-        the_string.replace('"', r'\"')
+        the_string = the_string.replace('"', r'""')
 
-        the_string = "\"" + the_string + "\""
+        the_string = '"' + the_string + '"'
 
+        return the_string
+
+    def remove_newlines(self, the_string):
+        """
+        removes newlines
+        :param the_string:
+        :return:
+        """
+        the_string = the_string.replace('\n', r' ')
         return the_string
 
     def combine_description(self, description, location_details, admission_details):
@@ -253,13 +278,9 @@ class Scraper(object):
         :return:
         """
 
-        return_string = description
+        return_string = description + ' '
 
-        return_string += "<h2>Location Details</h2>"
-
-        return_string += location_details
-
-        return_string += '<h2>Admission Details</h2>'
+        return_string += location_details + ' '
 
         return_string += admission_details
 
@@ -337,12 +358,20 @@ column_titles = ['Title','Description','Date From','Date To','Recurrence','Start
            'Allow User Activity','Allow User Attendance','Visibility','Featured Tabs',
            'Sponsored','Venue Page Only','Exclude From Trending','Event Types','Invited Audience']
 
-writer = Writer(column_titles)
-
 import pprint
 pp = pprint.PrettyPrinter(indent=4)
-# pp.pprint(events[0])
+# pp.pprint(events[0]['Description'])
+# print(events[0]['Description'])
 
-writer.write(events[0])
+out_stream = open('event_import.csv', 'w')
+
+writer = Writer(column_titles, out_stream)
+
+writer.write_headers()
+
+for event in events:
+    writer.write_event(event)
+
+out_stream.close()
 
 

@@ -1,5 +1,6 @@
 .idea
 .Python
+.csv
 pip-selfcheck.json
 bin
 lib
