@@ -227,11 +227,12 @@ class Scraper(object):
         container = main_content.find('div', {'class': 'field field-name-field-event-image field-type-image '
                                                        'field-label-hidden'})
 
-        div = container.find('div', {'class': 'field-items'})
+        if container is not None:
+            div = container.find('div', {'class': 'field-items'})
+            images = div.find_all('img')
+            return str(images[0]['src'])
 
-        images = div.find_all('img')
-
-        return str(images[0]['src'])
+        return ""
 
     def scrape_dates(self, main_content):
         container = main_content.find('div', {'class': 'field field-name-field-datetime field-type-datestamp '
@@ -668,12 +669,12 @@ writer = Writer(column_titles, out_stream)
 
 writer.write_headers()
 
-for i in xrange(1800, 1832):
+for i in xrange(1828, 2000):
     current_url = 'http://dev-ucscevents.pantheonsite.io/event/' + str(i)
-
+    print "processing url: " + current_url
     r = requests.get(current_url)
     if r.status_code != requests.codes.ok:
-        print '404: ' + current_url
+        print '     404'
     else:
         soup = get_soup_from_url(current_url)
         events = scraper.scrape_event(soup)
