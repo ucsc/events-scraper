@@ -33,8 +33,7 @@ class Writer(object):
         event_string = ""
         for column in self.columns:
             if column in event_dict:
-                column_string = self.zapper.zap_string(event_dict[column])
-                event_string += column_string + ','
+                event_string += event_dict[column] + ','
             else:
                 event_string += ','
 
@@ -48,6 +47,7 @@ class Scraper(object):
 
     def __init__(self):
         self.date_regex = re.compile(r'(^\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}).*')
+        self.zapper = GremlinZapper()
 
     def _scrape_group_items(self, main_content, class_name):
         """
@@ -82,7 +82,7 @@ class Scraper(object):
                     items_string += str(content)
 
             items_string = self.remove_newlines(items_string)
-
+        items_string = self.zapper.zap_string(items_string)
         return items_string
 
     def scrape_group_items_text(self, group_items):
@@ -105,6 +105,9 @@ class Scraper(object):
 
             items_string += last_item.contents[len(last_item.contents) - 1].text
             items_string = self.remove_newlines(items_string)
+        items_string = self.zapper.zap_string(items_string)
+
+        items_string = self.csv_quote_escape(items_string)
 
         return items_string
 
@@ -116,7 +119,13 @@ class Scraper(object):
         """
         container = body.find('div', {'class': 'grid_9 push_3'})
 
-        return container.find('h1', {'id': 'title'}).get_text()
+        title_string = container.find('h1', {'id': 'title'}).get_text()
+
+        title_string = self.zapper.zap_string(title_string)
+
+        title_string = self.csv_quote_escape(title_string)
+
+        return title_string
 
     def scrape_description(self, main_content):
         """
@@ -178,8 +187,6 @@ class Scraper(object):
                                                           'taxonomy-term-reference field-label-inline clearfix')
         sponsor_string = self.scrape_group_items_text(group_items)
 
-        sponsor_string = self.csv_quote_escape(sponsor_string)
-
         return sponsor_string
 
     def scrape_related_url(self, main_content):
@@ -208,8 +215,6 @@ class Scraper(object):
         group_items = self._scrape_group_items(main_content, 'field field-name-field-audience field-type-'
                                                              'taxonomy-term-reference field-label-inline clearfix')
         audience_string =  self.scrape_group_items_text(group_items)
-
-        audience_string = self.csv_quote_escape(audience_string)
 
         return audience_string
 
@@ -669,7 +674,7 @@ writer = Writer(column_titles, out_stream)
 
 writer.write_headers()
 
-for i in xrange(1828, 2000):
+for i in xrange(1921, 1922):
     current_url = 'http://dev-ucscevents.pantheonsite.io/event/' + str(i)
     print "processing url: " + current_url
     r = requests.get(current_url)
@@ -680,6 +685,7 @@ for i in xrange(1828, 2000):
         events = scraper.scrape_event(soup)
         for event in events:
             writer.write_event(event)
+            pp.pprint(event)
 
 
 out_stream.close()
