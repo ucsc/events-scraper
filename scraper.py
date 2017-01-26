@@ -1,3 +1,4 @@
+import bs4
 from bs4 import BeautifulSoup
 import requests
 import re
@@ -49,6 +50,27 @@ class Scraper(object):
         self.date_regex = re.compile(r'(^\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}).*')
         self.zapper = GremlinZapper()
 
+    def zap_tag_contents(self, tag):
+        """
+        Converts any Windows cp1252 or unicode characters in the text of
+        a BeautifulSoup bs4.element.Tag Object to ASCII equivalents
+        :rtype: bs4.element.Tag
+        :param tag: the Tag object to convert
+        :return: None
+        """
+        if hasattr(tag, 'contents'):
+            content_length = len(tag.contents)
+
+            for x in range(0, content_length):
+                if isinstance(tag.contents[x], bs4.element.Comment):
+                    self.zap_tag_contents(tag.contents[x])
+                elif isinstance(tag.contents[x], bs4.element.NavigableString):
+                    unicode_entry = self.zapper.kill_gremlins(tag.contents[x])
+                    unicode_entry = unidecode(unicode_entry)
+                    tag.contents[x].replace_with(unicode_entry)
+                elif isinstance(tag.contents[x], bs4.element.Tag):
+                    self.zap_tag_contents(tag.contents[x])
+
     def _scrape_group_items(self, main_content, class_name):
         """
 
@@ -78,8 +100,9 @@ class Scraper(object):
 
         if group_items is not None:
             for item in group_items:
-                for content in item.contents:
-                    items_string += str(content)
+                item_text = item.text
+                item_text = self.zapper.zap_string(item_text)
+                items_string += item_text
 
             items_string = self.remove_newlines(items_string)
         items_string = self.zapper.zap_string(items_string)
@@ -674,7 +697,7 @@ writer = Writer(column_titles, out_stream)
 
 writer.write_headers()
 
-for i in xrange(1921, 1922):
+for i in xrange(2771, 2774):
     current_url = 'http://dev-ucscevents.pantheonsite.io/event/' + str(i)
     print "processing url: " + current_url
     r = requests.get(current_url)
@@ -685,7 +708,7 @@ for i in xrange(1921, 1922):
         events = scraper.scrape_event(soup)
         for event in events:
             writer.write_event(event)
-            pp.pprint(event)
+            # pp.pprint(event)
 
 
 out_stream.close()
