@@ -258,7 +258,9 @@ class Scraper(object):
         if container is not None:
             div = container.find('div', {'class': 'field-items'})
             images = div.find_all('img')
-            return str(images[0]['src'])
+            image_str = str(images[0]['src'])
+            image_str = image_str.replace("/styles/scale-380/public", "", 1)
+            return image_str
 
         return ""
 
