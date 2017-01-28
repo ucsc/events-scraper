@@ -237,11 +237,11 @@ class Scraper(object):
         """
         group_items = self._scrape_group_items(main_content, 'field field-name-field-audience field-type-'
                                                              'taxonomy-term-reference field-label-inline clearfix')
-        audience_string =  self.scrape_group_items_text(group_items)
+        audience_string = self.scrape_group_items_text(group_items)
 
         return audience_string
 
-    def scrape_category(self, main_content):
+    def scrape_categories(self, main_content):
         """
         Scrapes the event category
         :param main_content:
@@ -345,7 +345,7 @@ class Scraper(object):
         sponsor = self.scrape_sponsor(content)
         related_url = self.scrape_related_url(content)
         invited_audience = self.scrape_invited_audience(content)
-        category = self.scrape_category(content)
+        categories = self.scrape_categories(content)
         image = self.scrape_image(content)
         date_times = self.scrape_dates(content)
 
@@ -364,7 +364,8 @@ class Scraper(object):
                 'Event Website': related_url,
                 'Photo URL': image,
                 "Sponsored": sponsor,
-                "Invited Audience": invited_audience
+                "Invited Audience": invited_audience,
+                "Event Types": categories
             }
             event_list.append(event_dict)
         return event_list
@@ -686,7 +687,7 @@ column_titles = ['Title','Description','Date From','Date To','Recurrence','Start
                  'Location','Address','City','State','Event Website','Room','Keywords','Tags',
                  'Photo URL','Ticket URL','Cost','Hashtag','Facebook URL','Group','Department',
                  'Allow User Activity','Allow User Attendance','Visibility','Featured Tabs',
-                 'Sponsored','Venue Page Only','Exclude From Trending','Event Types','Invited Audience']
+                 'Sponsored','Venue Page Only','Exclude From Trending','Event Types','Invited Audience', 'Original URL']
 
 import pprint
 pp = pprint.PrettyPrinter(indent=4)
@@ -699,7 +700,7 @@ writer = Writer(column_titles, out_stream)
 
 writer.write_headers()
 
-for i in xrange(2771, 2774):
+for i in xrange(3800, 3810):
     current_url = 'http://dev-ucscevents.pantheonsite.io/event/' + str(i)
     print "processing url: " + current_url
     r = requests.get(current_url)
@@ -709,6 +710,7 @@ for i in xrange(2771, 2774):
         soup = get_soup_from_url(current_url)
         events = scraper.scrape_event(soup)
         for event in events:
+            event['Original URL'] = current_url
             writer.write_event(event)
             # pp.pprint(event)
 
