@@ -48,6 +48,7 @@ class Scraper(object):
 
     def __init__(self):
         self.date_regex = re.compile(r'(^\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}).*')
+        self.all_day_regex = re.compile(r'.*\(All day\).*')
         self.zapper = GremlinZapper()
 
     def zap_tag_contents(self, tag):
@@ -273,7 +274,11 @@ class Scraper(object):
         dates_list = []
 
         for date_span in date_spans:
-            dates_list.append(date_span['content'])
+            is_all_day = False
+            match = self.all_day_regex.match(date_span.text)
+            if match:
+                is_all_day = True
+            dates_list.append((date_span['content'], is_all_day))
 
         return dates_list
 
@@ -352,13 +357,20 @@ class Scraper(object):
         event_list = []
 
         for date_time in date_times:
-            date, time = self.date_time_to_tuple(date_time)
+            date, start_time = self.date_time_to_tuple(date_time[0])
+            end_time = ''
+
+            # If the date_time tuple shows that it is an all day event
+            if date_time[1]:
+                start_time = '8:00'
+                end_time = '20:00'
             full_description = self.combine_description(description, location_details, admission_details)
             event_dict = {
                 'Title': title,
                 "Description": full_description,
                 'Date From': date,
-                'Start Time': time,
+                'Start Time': start_time,
+                'End Time': end_time,
                 'Location': location,
                 'Cost': admission,
                 'Event Website': related_url,
@@ -700,7 +712,7 @@ writer = Writer(column_titles, out_stream)
 
 writer.write_headers()
 
-for i in xrange(3800, 3810):
+for i in xrange(2503, 2504):
     current_url = 'http://dev-ucscevents.pantheonsite.io/event/' + str(i)
     print "processing url: " + current_url
     r = requests.get(current_url)
