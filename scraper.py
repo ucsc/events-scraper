@@ -178,7 +178,7 @@ class Scraper(object):
         :return:
         """
         group_items = self._scrape_group_items(main_content, 'field field-name-field-event-location-details '
-                                                          'field-type-text-long field-label-above')
+                                                             'field-type-text-long field-label-above')
         return self.scrape_group_items_str(group_items)
 
     def scrape_admission(self, main_content):
@@ -198,8 +198,15 @@ class Scraper(object):
         :return:
         """
         group_items = self._scrape_group_items(main_content, 'field field-name-field-admission-details '
-                                                          'field-type-text-long field-label-above')
-        return self.scrape_group_items_str(group_items)
+                                                             'field-type-text-long field-label-above')
+        details_str = self.scrape_group_items_str(group_items)
+
+        details_str = details_str.lstrip()
+        details_str = details_str.rstrip()
+
+        details_str = self.csv_quote_escape(details_str)
+
+        return details_str
 
     def scrape_sponsor(self, main_content):
         """
@@ -313,7 +320,7 @@ class Scraper(object):
         the_string = the_string.replace('\n', r' ')
         return the_string
 
-    def combine_description(self, description, location_details, admission_details):
+    def combine_description(self, description, location_details):
         """
         Combines the description, location details, and admission details into one string
         :param description:
@@ -324,10 +331,7 @@ class Scraper(object):
 
         return_string = description + ' '
 
-        return_string += location_details + ' '
-
-        return_string += admission_details
-
+        return_string += location_details
         return_string = self.csv_quote_escape(return_string)
 
         return return_string
@@ -354,6 +358,11 @@ class Scraper(object):
         image = self.scrape_image(content)
         date_times = self.scrape_dates(content)
 
+        cost = admission_details
+
+        if admission_details == '""':
+            cost = admission
+
         event_list = []
 
         for date_time in date_times:
@@ -364,7 +373,7 @@ class Scraper(object):
             if date_time[1]:
                 start_time = '8:00'
                 end_time = '20:00'
-            full_description = self.combine_description(description, location_details, admission_details)
+            full_description = self.combine_description(description, location_details)
             event_dict = {
                 'Title': title,
                 "Description": full_description,
@@ -372,7 +381,7 @@ class Scraper(object):
                 'Start Time': start_time,
                 'End Time': end_time,
                 'Location': location,
-                'Cost': admission,
+                'Cost': cost,
                 'Event Website': related_url,
                 'Photo URL': image,
                 "Sponsored": sponsor,
@@ -712,7 +721,7 @@ writer = Writer(column_titles, out_stream)
 
 writer.write_headers()
 
-for i in xrange(2503, 2504):
+for i in xrange(4050, 4110):
     current_url = 'http://dev-ucscevents.pantheonsite.io/event/' + str(i)
     print "processing url: " + current_url
     r = requests.get(current_url)
@@ -725,7 +734,6 @@ for i in xrange(2503, 2504):
             event['Original URL'] = current_url
             writer.write_event(event)
             # pp.pprint(event)
-
 
 out_stream.close()
 
