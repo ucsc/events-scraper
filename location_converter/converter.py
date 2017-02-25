@@ -310,7 +310,8 @@ def convert_address_components(address_components):
         'locality',
         'administrative_area_level_1',
         'country',
-        'postal_code'
+        'postal_code',
+        'premise'
     }
 
     for component in address_components:
@@ -320,6 +321,39 @@ def convert_address_components(address_components):
 
     return return_dict
 
+def csv_quote_escape(the_string):
+    """
+    replaces " with \" and places quotes aroudn the string
+    :param the_string:
+    :return:
+    """
+    the_string = the_string.replace('"', r'""')
+
+    the_string = '"' + the_string + '"'
+
+    return the_string
+
+def remove_newlines(the_string):
+    """
+    removes newlines
+    :param the_string:
+    :return:
+    """
+    the_string = the_string.replace('\n', r' ')
+    return the_string
+
+def format_string(the_string):
+    """
+    formats a string to be csv safe
+    :param the_string:
+    :return:
+    """
+    zapper = GremlinZapper()
+    the_string = zapper.zap_string(the_string)
+    the_string = remove_newlines(the_string)
+    the_string = csv_quote_escape(the_string)
+
+    return the_string
 
 zapper = GremlinZapper()
 
@@ -396,8 +430,11 @@ for location_subdict in location_list:
         geo_entry = geo_results[0]
         address_components = convert_address_components(geo_entry['address_components'])
 
+        if 'premise' in address_components:
+            street_address = address_components['premise'] + ' '
+
         if 'street_number' in address_components:
-            street_address = address_components['street_number'] + ' '
+            street_address += address_components['street_number'] + ' '
 
         if 'route' in address_components:
             street_address += address_components['route']
@@ -410,6 +447,12 @@ for location_subdict in location_list:
 
         if 'postal_code' in address_components:
             postal_code = address_components['postal_code']
+
+    title = format_string(title)
+    street_address = format_string(street_address)
+    city = format_string(city)
+    state = format_string(state)
+    postal_code = format_string(postal_code)
 
     address_dict = {
         'Name': zapper.zap_string(title),
