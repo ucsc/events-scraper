@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import requests
 import re
 from unidecode import unidecode
-
+import argparse
 
 class Writer(object):
     """
@@ -700,6 +700,21 @@ class GremlinZapper(object):
             the_string = unidecode(the_string)
         return the_string
 
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument('-s', action='store', dest='start_index', type=int,
+                    help='The starting index for events. Default is 0')
+
+parser.add_argument('-e', action='store', dest='end_index', type=int,
+                    help='The starting index for events. Default is 5,000')
+
+results = parser.parse_args()
+
+start_index = results.start_index or 0
+
+end_index = results.end_index or 5000
+
 # soup = get_soup_from_url('http://dev-ucscevents.pantheonsite.io/event/3000')
 scraper = Scraper()
 # events = scraper.scrape_event(soup)
@@ -710,10 +725,6 @@ column_titles = ['Title','Description','Date From','Date To','Recurrence','Start
                  'Allow User Activity','Allow User Attendance','Visibility','Featured Tabs',
                  'Sponsored','Venue Page Only','Exclude From Trending','Event Types','Invited Audience', 'Original URL']
 
-import pprint
-pp = pprint.PrettyPrinter(indent=4)
-# pp.pprint(events[0]['Description'])
-# print(events[0]['Description'])
 
 out_stream = open('event_import.csv', 'w')
 
@@ -721,7 +732,7 @@ writer = Writer(column_titles, out_stream)
 
 writer.write_headers()
 
-for i in xrange(4050, 4110):
+for i in xrange(start_index, end_index + 1):
     current_url = 'http://dev-ucscevents.pantheonsite.io/event/' + str(i)
     print "processing url: " + current_url
     r = requests.get(current_url)
