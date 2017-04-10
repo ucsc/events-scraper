@@ -384,7 +384,7 @@ class Scraper(object):
                 'Cost': cost,
                 'Event Website': related_url,
                 'Photo URL': image,
-                "Sponsored": sponsor,
+                "Department": sponsor,
                 "Invited Audience": invited_audience,
                 "Event Types": categories
             }
@@ -733,7 +733,7 @@ writer = Writer(column_titles, out_stream)
 writer.write_headers()
 
 for i in xrange(start_index, end_index + 1):
-    current_url = 'http://dev-ucscevents.pantheonsite.io/event/' + str(i)
+    current_url = 'http://test-ucscevents.pantheonsite.io/event/' + str(i)
     print "processing url: " + current_url
     r = requests.get(current_url)
     if r.status_code != requests.codes.ok:
