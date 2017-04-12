@@ -5,6 +5,7 @@ import re
 from unidecode import unidecode
 import argparse
 
+
 class Writer(object):
     """
     Class to write event(s) to csv with or without column names
@@ -25,7 +26,7 @@ class Writer(object):
 
         self.out.write('\n')
 
-    def write_event(self, event_dict):
+    def write_object(self, event_dict):
         """
 
         :param event_dict:
@@ -40,6 +41,7 @@ class Writer(object):
 
         event_string += "\n"
         self.out.write(event_string)
+
 
 class Scraper(object):
     """
@@ -384,7 +386,7 @@ class Scraper(object):
                 'Cost': cost,
                 'Event Website': related_url,
                 'Photo URL': image,
-                "Department": sponsor,
+                "Group": sponsor,
                 "Invited Audience": invited_audience,
                 "Event Types": categories
             }
@@ -709,7 +711,12 @@ parser.add_argument('-s', action='store', dest='start_index', type=int,
 parser.add_argument('-e', action='store', dest='end_index', type=int,
                     help='The starting index for events. Default is 5,000')
 
+parser.add_argument('-g', action='store_true', dest='write_groups', default=False,
+                    help="If this flag is added, a csv of groups found will be generated")
+
 results = parser.parse_args()
+
+write_groups = results.write_groups
 
 start_index = results.start_index or 0
 
@@ -719,16 +726,26 @@ end_index = results.end_index or 5000
 scraper = Scraper()
 # events = scraper.scrape_event(soup)
 
-column_titles = ['Title','Description','Date From','Date To','Recurrence','Start Time','End Time',
-                 'Location','Address','City','State','Event Website','Room','Keywords','Tags',
-                 'Photo URL','Ticket URL','Cost','Hashtag','Facebook URL','Group','Department',
-                 'Allow User Activity','Allow User Attendance','Visibility','Featured Tabs',
-                 'Sponsored','Venue Page Only','Exclude From Trending','Event Types','Invited Audience', 'Original URL']
+event_column_titles = [
+    'Title','Description','Date From','Date To','Recurrence','Start Time','End Time',
+    'Location','Address','City','State','Event Website','Room','Keywords','Tags',
+    'Photo URL','Ticket URL','Cost','Hashtag','Facebook URL','Group','Department',
+    'Allow User Activity','Allow User Attendance','Visibility','Featured Tabs',
+    'Sponsored','Venue Page Only','Exclude From Trending','Event Types','Invited Audience', 'Original URL'
+]
 
+group_column_titles = [
+    'Name', 'Description', 'Type', 'URL', 'Photo URL', 'Skip Officer Approval',
+    'Twitter', 'Facebook URL'
+]
+
+group_set = set()
+
+groups = []
 
 out_stream = open('event_import.csv', 'w')
 
-writer = Writer(column_titles, out_stream)
+writer = Writer(event_column_titles, out_stream)
 
 writer.write_headers()
 
@@ -743,9 +760,32 @@ for i in xrange(start_index, end_index + 1):
         events = scraper.scrape_event(soup)
         for event in events:
             event['Original URL'] = current_url
-            writer.write_event(event)
+            writer.write_object(event)
+
+            groups_string = event['Group']
+            groups_list = [x.strip().strip('"') for x in groups_string.split(',')]
+
+            for group_string in groups_list:
+                if len(group_string) > 0:
+                    group_set.add('"' + group_string + '"')
             # pp.pprint(event)
 
 out_stream.close()
+
+if write_groups:
+    if '' in group_set:
+        group_set.remove('')
+    for group_name in group_set:
+        groups.append({
+            'Name': group_name,
+        })
+
+    out_stream = open('group_import.csv', 'w')
+    writer = Writer(group_column_titles, out_stream)
+    writer.write_headers()
+
+    for group in groups:
+        writer.write_object(group)
+    out_stream.close()
 
 
