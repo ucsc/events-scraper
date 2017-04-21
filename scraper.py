@@ -120,13 +120,13 @@ class Scraper(object):
         items_string = ''
 
         if group_items is not None:
-            for i in xrange(len(group_items) - 1):
+            for i in range(len(group_items) - 1):
                 for content in group_items[i].contents:
                     items_string += content.text + ', '
 
             last_item = group_items[len(group_items) - 1]
 
-            for x in xrange(len(last_item.contents) - 1):
+            for x in range(len(last_item.contents) - 1):
                 items_string += last_item.contents[x].text + ', '
 
             items_string += last_item.contents[len(last_item.contents) - 1].text
@@ -687,7 +687,7 @@ class GremlinZapper(object):
 
             if isinstance(text, type("")):
                 # make sure we have a unicode string
-                text = unicode(text, "iso-8859-1")
+                text = str(text, "iso-8859-1")
             text = re.sub(self.gremlin_regex_1252, fixup, text)
         return text
 
@@ -698,7 +698,7 @@ class GremlinZapper(object):
         :return: input string with gremlins replaced
         """
         the_string = self.kill_gremlins(the_string)
-        if isinstance(the_string, unicode):
+        if isinstance(the_string, str):
             the_string = unidecode(the_string)
         return the_string
 
@@ -749,12 +749,12 @@ writer = Writer(event_column_titles, out_stream)
 
 writer.write_headers()
 
-for i in xrange(start_index, end_index + 1):
+for i in range(start_index, end_index + 1):
     current_url = 'http://test-ucscevents.pantheonsite.io/event/' + str(i)
-    print "processing url: " + current_url
+    print("processing url: " + current_url)
     r = requests.get(current_url)
     if r.status_code != requests.codes.ok:
-        print '     404'
+        print('     404')
     else:
         soup = get_soup_from_url(current_url)
         events = scraper.scrape_event(soup)
