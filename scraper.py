@@ -791,12 +791,12 @@ def main():
 
     # iterates through the specified event numbers and scrapes each one and writes
     # it to the output file
-    for i in xrange(start_index, end_index + 1):
+    for i in range(start_index, end_index + 1):
         current_url = 'http://test-ucscevents.pantheonsite.io/event/' + str(i)
-        print "processing url: " + current_url
+        print("processing url: " + current_url)
         r = requests.get(current_url)
         if r.status_code != requests.codes.ok:
-            print '     404'
+            print('     404')
         else:
             soup = get_soup_from_url(current_url)
             events = scraper.scrape_event(soup)
