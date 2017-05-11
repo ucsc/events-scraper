@@ -1,5 +1,6 @@
-# events-scraper
+# Events Scraper and Locations Converter
 Python Script to scrape events from events.ucsc.edu and convert format them for upload to localist.com
+Can also generate groups and locations csv files for localist upload
 
 ## Installation
 
@@ -29,7 +30,7 @@ After cloning the repository
 
 ## Managing the virtualenv
 
-Always activate the virtualenv before running the scraper
+Always activate the virtualenv before running the scraper or the locations converter
 
     . venv/bin/activate
 
@@ -78,3 +79,13 @@ For example, to scrape events 3200 through 3350
 This is an experimental functionality, which takes the groups fields from the events and generates a csv import of groups for localist.  It is currently not reccomended to use this, as the ucsc event categories are standardize, so the resulting groups csv will not contain consistent groups.
 
     python3 scraper.py -g
+
+## The Locations Converter
+This script located in the location_converter folder converts locations from json format to csv for localist input, while also converting longitutde and latitudes to approximate addresses using google's reverse geocoding api.
+
+If the json object for a location contains both a latitute and a longitude, the script will convert them to an address, otherwise it will use a provided address or ignore the location entirely.
+
+### To run
+
+    cd location_converter
+    python3 converter.py

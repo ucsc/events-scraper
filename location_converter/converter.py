@@ -293,9 +293,10 @@ class GremlinZapper(object):
         :return: input string with gremlins replaced
         """
         the_string = self.kill_gremlins(the_string)
-        if isinstance(the_string, unicode):
+        if isinstance(the_string, type("")):
             the_string = unidecode(the_string)
         return the_string
+
 
 def convert_address_components(address_components):
     """
@@ -321,6 +322,7 @@ def convert_address_components(address_components):
 
     return return_dict
 
+
 def csv_quote_escape(the_string):
     """
     replaces " with \" and places quotes aroudn the string
@@ -333,6 +335,7 @@ def csv_quote_escape(the_string):
 
     return the_string
 
+
 def remove_newlines(the_string):
     """
     removes newlines
@@ -341,6 +344,7 @@ def remove_newlines(the_string):
     """
     the_string = the_string.replace('\n', r' ')
     return the_string
+
 
 def format_string(the_string):
     """
@@ -355,15 +359,24 @@ def format_string(the_string):
 
     return the_string
 
-zapper = GremlinZapper()
 
-csv_filename = 'locations.csv'
+def main():
+    """
+    iterates through each location in the locations.json file and converts 
+    the longitute and latitude to a street address using the google maps
+    reverse geocode api
+    :return: 
+    """
 
-api_key = 'AIzaSyCHuPLkBcYjp9vLmV31Rhv15re0fxK0jUM'
+    zapper = GremlinZapper()
 
-reverse_geo_url = 'https://maps.googleapis.com/maps/api/geocode/json'
+    csv_filename = 'locations.csv'
 
-column_titles = [
+    api_key = 'AIzaSyCHuPLkBcYjp9vLmV31Rhv15re0fxK0jUM'
+
+    reverse_geo_url = 'https://maps.googleapis.com/maps/api/geocode/json'
+
+    column_titles = [
         'Name',
         'Description',
         'Type',
@@ -381,96 +394,100 @@ column_titles = [
         'Facebook URL'
     ]
 
-location_dict = json.loads(open('locations.json').read())
+    location_dict = json.loads(open('locations.json').read())
 
-location_list = location_dict['locations']
+    location_list = location_dict['locations']
 
-export_file = open(csv_filename, 'w')
+    export_file = open(csv_filename, 'w')
 
-for header in column_titles:
-    export_file.write(str(header) + ',')
+    for header in column_titles:
+        export_file.write(str(header) + ',')
 
-export_file.write('\n')
+    export_file.write('\n')
 
-for location_subdict in location_list:
-    location = location_subdict['location']
-    title = ''
-    street_address = ''
-    city = ''
-    state = ''
-    postal_code = ''
+    for location_subdict in location_list:
+        location = location_subdict['location']
+        title = ''
+        street_address = ''
+        city = ''
+        state = ''
+        postal_code = ''
 
-    if 'title' in location:
-        title = location['title']
-        print title
-    else:
-        print 'no title'
-
-    if 'street_address' in location:
-        street_address = location['street_address']
-
-    if 'city' in location:
-        city = location['city']
-
-    if 'state' in location:
-        state = location['state']
-
-    if 'postal_code' in location:
-        postal_code = location['postal_code']
-
-    if not (len(street_address) > 0 and
-                    len(city) > 0 and
-                    len(state) > 0 and
-                    len(postal_code) > 0):
-
-        payload = {'latlng': location['geo'], 'key': api_key}
-        response = requests.get(reverse_geo_url, params=payload)
-        geo_dict = response.json()
-        geo_results = geo_dict['results']
-        geo_entry = geo_results[0]
-        address_components = convert_address_components(geo_entry['address_components'])
-
-        if 'premise' in address_components:
-            street_address = address_components['premise'] + ' '
-
-        if 'street_number' in address_components:
-            street_address += address_components['street_number'] + ' '
-
-        if 'route' in address_components:
-            street_address += address_components['route']
-
-        if 'locality' in address_components:
-            city = address_components['locality']
-
-        if 'administrative_area_level_1' in address_components:
-            state = address_components['administrative_area_level_1']
-
-        if 'postal_code' in address_components:
-            postal_code = address_components['postal_code']
-
-    title = format_string(title)
-    street_address = format_string(street_address)
-    city = format_string(city)
-    state = format_string(state)
-    postal_code = format_string(postal_code)
-
-    address_dict = {
-        'Name': zapper.zap_string(title),
-        'Address': zapper.zap_string(street_address),
-        'City': zapper.zap_string(city),
-        'State': zapper.zap_string(state),
-        'Zip': zapper.zap_string(postal_code)
-    }
-
-    event_string = ""
-    for column in column_titles:
-        if column in address_dict:
-            event_string += address_dict[column] + ','
+        if 'title' in location:
+            title = location['title']
+            print(title)
         else:
-            event_string += ','
+            print('no title')
 
-    event_string += "\n"
+        if 'street_address' in location:
+            street_address = location['street_address']
 
-    export_file.write(event_string)
+        if 'city' in location:
+            city = location['city']
 
-export_file.close()
+        if 'state' in location:
+            state = location['state']
+
+        if 'postal_code' in location:
+            postal_code = location['postal_code']
+
+        if not (len(street_address) > 0 and
+                        len(city) > 0 and
+                        len(state) > 0 and
+                        len(postal_code) > 0):
+
+            payload = {'latlng': location['geo'], 'key': api_key}
+            response = requests.get(reverse_geo_url, params=payload)
+            geo_dict = response.json()
+            geo_results = geo_dict['results']
+            geo_entry = geo_results[0]
+            address_components = convert_address_components(geo_entry['address_components'])
+
+            if 'premise' in address_components:
+                street_address = address_components['premise'] + ' '
+
+            if 'street_number' in address_components:
+                street_address += address_components['street_number'] + ' '
+
+            if 'route' in address_components:
+                street_address += address_components['route']
+
+            if 'locality' in address_components:
+                city = address_components['locality']
+
+            if 'administrative_area_level_1' in address_components:
+                state = address_components['administrative_area_level_1']
+
+            if 'postal_code' in address_components:
+                postal_code = address_components['postal_code']
+
+        title = format_string(title)
+        street_address = format_string(street_address)
+        city = format_string(city)
+        state = format_string(state)
+        postal_code = format_string(postal_code)
+
+        address_dict = {
+            'Name': zapper.zap_string(title),
+            'Address': zapper.zap_string(street_address),
+            'City': zapper.zap_string(city),
+            'State': zapper.zap_string(state),
+            'Zip': zapper.zap_string(postal_code)
+        }
+
+        event_string = ""
+        for column in column_titles:
+            if column in address_dict:
+                event_string += address_dict[column] + ','
+            else:
+                event_string += ','
+
+        event_string += "\n"
+
+        export_file.write(event_string)
+
+    export_file.close()
+
+
+if __name__ == "__main__":
+    main()
