@@ -28,7 +28,9 @@ class Writer(object):
 
     def write_object(self, event_dict):
         """
-
+        Accepts a an event dictionary where keys are columns
+        to be output and values are the data for the aspect of the event
+        writes to the file the writer was initialized with in csv format
         :param event_dict:
         :return:
         """
@@ -49,7 +51,9 @@ class Scraper(object):
     """
 
     def __init__(self):
+        # regex to find the different possible date formats on an event
         self.date_regex = re.compile(r'(^\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}).*')
+        # regex to check if an event is an all day event
         self.all_day_regex = re.compile(r'.*\(All day\).*')
         self.zapper = GremlinZapper()
 
@@ -57,6 +61,10 @@ class Scraper(object):
         """
         Converts any Windows cp1252 or unicode characters in the text of
         a BeautifulSoup bs4.element.Tag Object to ASCII equivalents
+        
+        Iterates through each sub element of the tag, if it is another
+        tag it calls the function recursively, if it is a string it uses the
+        gremlin zapper to convert to ascii characters
         :rtype: bs4.element.Tag
         :param tag: the Tag object to convert
         :return: None
@@ -76,7 +84,10 @@ class Scraper(object):
 
     def _scrape_group_items(self, main_content, class_name):
         """
-
+        Since most fields within an event hold the data we want in
+        HTML elements with the same class names, this function can scrape
+        data from within a given html field by simply using the class of the HTML
+        element that uniquely identifies which field within the event it is
         :param main_content:
         :param class_name:
         :return:
@@ -95,7 +106,8 @@ class Scraper(object):
 
     def scrape_group_items_str(self, group_items):
         """
-        Converts group items to a string
+        Converts group items to a string that will not mess up
+        the formatting for a csv file
         :param group_items:
         :return:
         """
@@ -139,7 +151,7 @@ class Scraper(object):
 
     def scrape_title(self, body):
         """
-
+        Gets the event title
         :param soup:
         :return:
         """
@@ -262,6 +274,12 @@ class Scraper(object):
         return self.scrape_group_items_str(group_items)
 
     def scrape_image(self, main_content):
+        """
+        Scrapes the event image. Removes part of the image path
+        so that the url points to the full size image path
+        :param main_content: 
+        :return: 
+        """
         container = main_content.find('div', {'class': 'field field-name-field-event-image field-type-image '
                                                        'field-label-hidden'})
 
@@ -275,6 +293,11 @@ class Scraper(object):
         return ""
 
     def scrape_dates(self, main_content):
+        """
+        Scrapes the dates that this event takes place on
+        :param main_content: 
+        :return: 
+        """
         container = main_content.find('div', {'class': 'field field-name-field-datetime field-type-datestamp '
                                                        'field-label-above'})
 
@@ -313,6 +336,15 @@ class Scraper(object):
 
         return the_string
 
+    def escape_newlines(self, the_string):
+        """
+        surrounds any new line characters in double quotes
+        :param the_string: 
+        :return: 
+        """
+        the_string = the_string.replace('\n', r'""\n""')
+        return the_string
+
     def remove_newlines(self, the_string):
         """
         removes newlines
@@ -324,10 +356,9 @@ class Scraper(object):
 
     def combine_description(self, description, location_details):
         """
-        Combines the description, location details, and admission details into one string
+        Combines the description and location details into one string
         :param description:
         :param location_details:
-        :param admission_details:
         :return:
         """
 
@@ -703,89 +734,101 @@ class GremlinZapper(object):
         return the_string
 
 
-parser = argparse.ArgumentParser()
+def main():
+    """
+    This is the main function for the script
+    it parses arguments, scrapes the event number specified,
+    and writes them to a csv file called "event_import.csv"
+    :return: 
+    """
 
-parser.add_argument('-s', action='store', dest='start_index', type=int,
-                    help='The starting index for events. Default is 0')
+    # parses arguments
+    parser = argparse.ArgumentParser()
 
-parser.add_argument('-e', action='store', dest='end_index', type=int,
-                    help='The starting index for events. Default is 5,000')
+    parser.add_argument('-s', action='store', dest='start_index', type=int,
+                        help='The starting index for events. Default is 0')
 
-parser.add_argument('-g', action='store_true', dest='write_groups', default=False,
-                    help="If this flag is added, a csv of groups found will be generated")
+    parser.add_argument('-e', action='store', dest='end_index', type=int,
+                        help='The starting index for events. Default is 5,000')
 
-results = parser.parse_args()
+    parser.add_argument('-g', action='store_true', dest='write_groups', default=False,
+                        help="If this flag is added, a csv of groups found will be generated")
 
-write_groups = results.write_groups
+    results = parser.parse_args()
 
-start_index = results.start_index or 0
+    write_groups = results.write_groups
 
-end_index = results.end_index or 5000
+    start_index = results.start_index or 0
 
-# soup = get_soup_from_url('http://dev-ucscevents.pantheonsite.io/event/3000')
-scraper = Scraper()
-# events = scraper.scrape_event(soup)
+    end_index = results.end_index or 5000
 
-event_column_titles = [
-    'Title','Description','Date From','Date To','Recurrence','Start Time','End Time',
-    'Location','Address','City','State','Event Website','Room','Keywords','Tags',
-    'Photo URL','Ticket URL','Cost','Hashtag','Facebook URL','Group','Department',
-    'Allow User Activity','Allow User Attendance','Visibility','Featured Tabs',
-    'Sponsored','Venue Page Only','Exclude From Trending','Event Types','Invited Audience', 'Original URL'
-]
+    scraper = Scraper()
 
-group_column_titles = [
-    'Name', 'Description', 'Type', 'URL', 'Photo URL', 'Skip Officer Approval',
-    'Twitter', 'Facebook URL'
-]
+    # these are the event column titles from the sample import csv given by localist
+    event_column_titles = [
+        'Title','Description','Date From','Date To','Recurrence','Start Time','End Time',
+        'Location','Address','City','State','Event Website','Room','Keywords','Tags',
+        'Photo URL','Ticket URL','Cost','Hashtag','Facebook URL','Group','Department',
+        'Allow User Activity','Allow User Attendance','Visibility','Featured Tabs',
+        'Sponsored','Venue Page Only','Exclude From Trending','Event Types','Invited Audience', 'Original URL'
+    ]
 
-group_set = set()
+    # these are the group name column titles from the sample group import csv given by localist
+    group_column_titles = [
+        'Name', 'Description', 'Type', 'URL', 'Photo URL', 'Skip Officer Approval',
+        'Twitter', 'Facebook URL'
+    ]
 
-groups = []
+    group_set = set()
 
-out_stream = open('event_import.csv', 'w')
+    groups = []
 
-writer = Writer(event_column_titles, out_stream)
+    out_stream = open('event_import.csv', 'w')
 
-writer.write_headers()
+    writer = Writer(event_column_titles, out_stream)
 
-for i in xrange(start_index, end_index + 1):
-    current_url = 'http://test-ucscevents.pantheonsite.io/event/' + str(i)
-    print "processing url: " + current_url
-    r = requests.get(current_url)
-    if r.status_code != requests.codes.ok:
-        print '     404'
-    else:
-        soup = get_soup_from_url(current_url)
-        events = scraper.scrape_event(soup)
-        for event in events:
-            event['Original URL'] = current_url
-            writer.write_object(event)
-
-            groups_string = event['Group']
-            groups_list = [x.strip().strip('"') for x in groups_string.split(',')]
-
-            for group_string in groups_list:
-                if len(group_string) > 0:
-                    group_set.add('"' + group_string + '"')
-            # pp.pprint(event)
-
-out_stream.close()
-
-if write_groups:
-    if '' in group_set:
-        group_set.remove('')
-    for group_name in group_set:
-        groups.append({
-            'Name': group_name,
-        })
-
-    out_stream = open('group_import.csv', 'w')
-    writer = Writer(group_column_titles, out_stream)
     writer.write_headers()
 
-    for group in groups:
-        writer.write_object(group)
+    # iterates through the specified event numbers and scrapes each one and writes
+    # it to the output file
+    for i in xrange(start_index, end_index + 1):
+        current_url = 'http://test-ucscevents.pantheonsite.io/event/' + str(i)
+        print "processing url: " + current_url
+        r = requests.get(current_url)
+        if r.status_code != requests.codes.ok:
+            print '     404'
+        else:
+            soup = get_soup_from_url(current_url)
+            events = scraper.scrape_event(soup)
+            for event in events:
+                event['Original URL'] = current_url
+
+                writer.write_object(event) # event written to output file here
+
+                groups_string = event['Group']
+                groups_list = [x.strip().strip('"') for x in groups_string.split(',')]
+
+                for group_string in groups_list:
+                    if len(group_string) > 0:
+                        group_set.add('"' + group_string + '"')
+
     out_stream.close()
+
+    # if a group import is to be generated, it is done here from the groups set
+    if write_groups:
+        if '' in group_set:
+            group_set.remove('')
+        for group_name in group_set:
+            groups.append({
+                'Name': group_name,
+            })
+
+        out_stream = open('group_import.csv', 'w')
+        writer = Writer(group_column_titles, out_stream)
+        writer.write_headers()
+
+        for group in groups:
+            writer.write_object(group)
+        out_stream.close()
 
 
