@@ -142,7 +142,7 @@ class Scraper(object):
                 items_string += last_item.contents[x].text + ', '
 
             items_string += last_item.contents[len(last_item.contents) - 1].text
-            items_string = self.remove_newlines(items_string)
+            items_string = self.escape_newlines(items_string)
         items_string = self.zapper.zap_string(items_string)
 
         items_string = self.csv_quote_escape(items_string)
@@ -362,7 +362,7 @@ class Scraper(object):
         :return:
         """
 
-        return_string = description + ' '
+        return_string = description + '\n'
 
         return_string += location_details
         return_string = self.csv_quote_escape(return_string)
@@ -831,4 +831,5 @@ def main():
             writer.write_object(group)
         out_stream.close()
 
-
+if __name__ == "__main__":
+    main()
