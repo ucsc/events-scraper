@@ -4,6 +4,8 @@ Can also generate groups and locations csv files for localist upload
 
 ## Installation
 
+### Prerequisites
+
 This script uses python3, so make sure you have it installed
 
     sudo apt install python3
@@ -20,6 +22,11 @@ You will also need the C bindings for the lxml library which have to be installe
 
     sudo apt install libxml2-dev libxslt-dev
 
+### Main installation
+
+Clone the repository
+
+    git clone https://github.com/ucsc/events-scraper.git
 
 After cloning the repository
 
