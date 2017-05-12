@@ -16,7 +16,7 @@ You will need the python 3 version of pip
 
 Make sure you have virtualenv installed
 
-    pip3 install virtualenv
+    sudo pip3 install virtualenv
 
 You will also need the C bindings for the lxml library which have to be installed before pip tries to install lxml in a virtualenv
 
@@ -63,14 +63,12 @@ The scraped events will be written to
 
 ### Command line options summary:
 
-    usage: scraper.py [-h] [-s START_INDEX] [-e END_INDEX] [-g]
+    usage: scraper.py [-h] [-s START_INDEX] [-e END_INDEX]
 
     optional arguments:
       -h, --help      show this help message and exit
       -s START_INDEX  The starting index for events, inclusive. Default is 0
       -e END_INDEX    The starting index for events, inclusive. Default is 5,000
-      -g              If this flag is added, a csv of groups found will be
-                      generated
 
 
 ### Scraping a subset of events
@@ -81,11 +79,6 @@ For example, to scrape events 3200 through 3350
 
     python3 scraper.py -s 3200 -e 3350
 
-### Generating a groups csv export
-
-This is an experimental functionality, which takes the groups fields from the events and generates a csv import of groups for localist.  It is currently not reccomended to use this, as the ucsc event categories are standardize, so the resulting groups csv will not contain consistent groups.
-
-    python3 scraper.py -g
 
 ## The Locations Converter
 This script located in the location_converter folder converts locations from json format to csv for localist input, while also converting longitutde and latitudes to approximate addresses using google's reverse geocoding api.

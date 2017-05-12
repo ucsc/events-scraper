@@ -213,7 +213,10 @@ class Scraper(object):
                                                           'field-type-entityreference field-label-inline clearfix')
         group_string = self.scrape_group_items_str(group_items)
 
-        return self.csv_quote_escape(group_string)
+        if len(group_string) > 0:
+            group_string = self.csv_quote_escape(group_string)
+
+        return group_string
 
     def scrape_location_details(self, main_content):
         """
@@ -223,9 +226,12 @@ class Scraper(object):
         """
         group_items = self._scrape_group_items(main_content, 'field field-name-field-event-location-details '
                                                              'field-type-text-long field-label-above')
-        group_html = self.scrape_group_items_html(group_items)
+        group_string = self.scrape_group_items_str(group_items)
 
-        return self.csv_quote_escape(group_html)
+        if len(group_string) > 0:
+            group_string = self.csv_quote_escape(group_string)
+
+        return group_string
 
     def scrape_admission(self, main_content):
         """
@@ -237,7 +243,10 @@ class Scraper(object):
                                                           'taxonomy-term-reference field-label-inline clearfix')
         group_string = self.scrape_group_items_str(group_items)
 
-        return self.csv_quote_escape(group_string)
+        if len(group_string) > 0:
+            group_string = self.csv_quote_escape(group_string)
+
+        return group_string
 
     def scrape_admission_details(self, main_content):
         """
@@ -252,7 +261,8 @@ class Scraper(object):
         details_str = details_str.lstrip()
         details_str = details_str.rstrip()
 
-        details_str = self.csv_quote_escape(details_str)
+        if len(details_str) > 0:
+            details_str = self.csv_quote_escape(details_str)
 
         return details_str
 
@@ -266,7 +276,10 @@ class Scraper(object):
                                                           'taxonomy-term-reference field-label-inline clearfix')
         sponsor_string = self.scrape_group_items_text(group_items)
 
-        return self.csv_quote_escape(sponsor_string)
+        if len(sponsor_string) > 0:
+            details_str = self.csv_quote_escape(sponsor_string)
+
+        return sponsor_string
 
     def scrape_related_url(self, main_content):
         """
@@ -283,7 +296,10 @@ class Scraper(object):
             if item is not None:
                 url = str(item['href'])
 
-        return self.csv_quote_escape(url)
+        if len(url) > 0:
+            url = self.csv_quote_escape(url)
+
+        return url
 
     def scrape_invited_audience(self, main_content):
         """
@@ -295,7 +311,10 @@ class Scraper(object):
                                                              'taxonomy-term-reference field-label-inline clearfix')
         audience_string = self.scrape_group_items_text(group_items)
 
-        return self.csv_quote_escape(audience_string)
+        if len(audience_string) > 0:
+            audience_string = self.csv_quote_escape(audience_string)
+
+        return audience_string
 
     def scrape_categories(self, main_content):
         """
@@ -307,7 +326,10 @@ class Scraper(object):
                                                              'taxonomy-term-reference field-label-inline clearfix')
         group_string = self.scrape_group_items_str(group_items)
 
-        return self.csv_quote_escape(group_string)
+        if len(group_string) > 0:
+            group_string = self.csv_quote_escape(group_string)
+
+        return group_string
 
     def scrape_image(self, main_content):
         """
@@ -390,21 +412,6 @@ class Scraper(object):
         the_string = the_string.replace('\n', r' ')
         return the_string
 
-    def combine_description(self, description, location_details):
-        """
-        Combines the description and location details into one string
-        :param description:
-        :param location_details:
-        :return:
-        """
-
-        return_string = description + '\n'
-
-        return_string += location_details
-        return_string = self.csv_quote_escape(return_string)
-
-        return return_string
-
     def scrape_event(self, body):
         """
         Scrapes an event soup and returns an Event Object
@@ -420,7 +427,7 @@ class Scraper(object):
         location_details = self.scrape_location_details(content)
         admission = self.scrape_admission(content)
         admission_details = self.scrape_admission_details(content)
-        sponsor = self.scrape_sponsor(content)
+        # sponsor = self.scrape_sponsor(content)
         related_url = self.scrape_related_url(content)
         invited_audience = self.scrape_invited_audience(content)
         categories = self.scrape_categories(content)
@@ -442,10 +449,9 @@ class Scraper(object):
             if date_time[1]:
                 start_time = '8:00'
                 end_time = '20:00'
-            full_description = description # self.combine_description(description, location_details)
             event_dict = {
                 'Title': title,
-                "Description": full_description,
+                "Description": description,
                 'Date From': date,
                 'Start Time': start_time,
                 'End Time': end_time,
@@ -453,7 +459,6 @@ class Scraper(object):
                 'Cost': cost,
                 'Event Website': related_url,
                 'Photo URL': image,
-                "Group": sponsor,
                 "Invited Audience": invited_audience,
                 "Event Types": categories,
                 "Location Details": location_details
@@ -788,12 +793,7 @@ def main():
     parser.add_argument('-e', action='store', dest='end_index', type=int,
                         help='The starting index for events. Default is 5,000')
 
-    parser.add_argument('-g', action='store_true', dest='write_groups', default=False,
-                        help="If this flag is added, a csv of groups found will be generated")
-
     results = parser.parse_args()
-
-    write_groups = results.write_groups
 
     start_index = results.start_index or 0
 
@@ -810,16 +810,6 @@ def main():
         'Sponsored','Venue Page Only','Exclude From Trending','Event Types','Invited Audience', 'Original URL',
         'Location Details'
     ]
-
-    # these are the group name column titles from the sample group import csv given by localist
-    group_column_titles = [
-        'Name', 'Description', 'Type', 'URL', 'Photo URL', 'Skip Officer Approval',
-        'Twitter', 'Facebook URL'
-    ]
-
-    group_set = set()
-
-    groups = []
 
     out_stream = open('event_import.csv', 'w')
 
@@ -843,31 +833,7 @@ def main():
 
                 writer.write_object(event) # event written to output file here
 
-                groups_string = event['Group']
-                groups_list = [x.strip().strip('"') for x in groups_string.split(',')]
-
-                for group_string in groups_list:
-                    if len(group_string) > 0:
-                        group_set.add('"' + group_string + '"')
-
     out_stream.close()
-
-    # if a group import is to be generated, it is done here from the groups set
-    if write_groups:
-        if '' in group_set:
-            group_set.remove('')
-        for group_name in group_set:
-            groups.append({
-                'Name': group_name,
-            })
-
-        out_stream = open('group_import.csv', 'w')
-        writer = Writer(group_column_titles, out_stream)
-        writer.write_headers()
-
-        for group in groups:
-            writer.write_object(group)
-        out_stream.close()
 
 if __name__ == "__main__":
     main()
