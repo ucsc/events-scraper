@@ -123,6 +123,30 @@ class Scraper(object):
         items_string = self.zapper.zap_string(items_string)
         return items_string
 
+    def scrape_group_items_html(self, group_items):
+        """
+        Extracts the inner html from group items
+        :param group_items:
+        :return:
+        """
+        items_string = ''
+
+        if group_items is not None:
+            for i in range(len(group_items) - 1):
+                for content in group_items[i].contents:
+                    items_string += str(content)
+
+            last_item = group_items[len(group_items) - 1]
+
+            for x in range(len(last_item.contents) - 1):
+                items_string += str(last_item.contents[x])
+
+            items_string += str(last_item.contents[len(last_item.contents) - 1])
+            # items_string = self.escape_newlines(items_string)
+        items_string = self.zapper.zap_string(items_string)
+
+        return items_string
+
     def scrape_group_items_text(self, group_items):
         """
         Extracts text from group items html
@@ -142,7 +166,7 @@ class Scraper(object):
                 items_string += last_item.contents[x].text + ', '
 
             items_string += last_item.contents[len(last_item.contents) - 1].text
-            items_string = self.escape_newlines(items_string)
+            # items_string = self.escape_newlines(items_string)
         items_string = self.zapper.zap_string(items_string)
 
         items_string = self.csv_quote_escape(items_string)
@@ -173,7 +197,11 @@ class Scraper(object):
         """
         group_items = self._scrape_group_items(main_content,
                                             'field field-name-body field-type-text-with-summary field-label-above')
-        return self.scrape_group_items_str(group_items)
+
+        group_html = self.scrape_group_items_html(group_items)
+
+        return self.csv_quote_escape(group_html)
+        # return self.scrape_group_items_str(group_items)
 
     def scrape_location(self, main_content):
         """
@@ -183,7 +211,9 @@ class Scraper(object):
         """
         group_items = self._scrape_group_items(main_content, 'field field-name-field-event-location '
                                                           'field-type-entityreference field-label-inline clearfix')
-        return self.scrape_group_items_str(group_items)
+        group_string = self.scrape_group_items_str(group_items)
+
+        return self.csv_quote_escape(group_string)
 
     def scrape_location_details(self, main_content):
         """
@@ -193,7 +223,9 @@ class Scraper(object):
         """
         group_items = self._scrape_group_items(main_content, 'field field-name-field-event-location-details '
                                                              'field-type-text-long field-label-above')
-        return self.scrape_group_items_str(group_items)
+        group_html = self.scrape_group_items_html(group_items)
+
+        return self.csv_quote_escape(group_html)
 
     def scrape_admission(self, main_content):
         """
@@ -203,7 +235,9 @@ class Scraper(object):
         """
         group_items = self._scrape_group_items(main_content, 'field field-name-field-admission field-type-'
                                                           'taxonomy-term-reference field-label-inline clearfix')
-        return self.scrape_group_items_str(group_items)
+        group_string = self.scrape_group_items_str(group_items)
+
+        return self.csv_quote_escape(group_string)
 
     def scrape_admission_details(self, main_content):
         """
@@ -232,7 +266,7 @@ class Scraper(object):
                                                           'taxonomy-term-reference field-label-inline clearfix')
         sponsor_string = self.scrape_group_items_text(group_items)
 
-        return sponsor_string
+        return self.csv_quote_escape(sponsor_string)
 
     def scrape_related_url(self, main_content):
         """
@@ -249,7 +283,7 @@ class Scraper(object):
             if item is not None:
                 url = str(item['href'])
 
-        return url
+        return self.csv_quote_escape(url)
 
     def scrape_invited_audience(self, main_content):
         """
@@ -261,7 +295,7 @@ class Scraper(object):
                                                              'taxonomy-term-reference field-label-inline clearfix')
         audience_string = self.scrape_group_items_text(group_items)
 
-        return audience_string
+        return self.csv_quote_escape(audience_string)
 
     def scrape_categories(self, main_content):
         """
@@ -271,7 +305,9 @@ class Scraper(object):
         """
         group_items = self._scrape_group_items(main_content, 'field field-name-field-event-type field-type-'
                                                              'taxonomy-term-reference field-label-inline clearfix')
-        return self.scrape_group_items_str(group_items)
+        group_string = self.scrape_group_items_str(group_items)
+
+        return self.csv_quote_escape(group_string)
 
     def scrape_image(self, main_content):
         """
@@ -406,7 +442,7 @@ class Scraper(object):
             if date_time[1]:
                 start_time = '8:00'
                 end_time = '20:00'
-            full_description = self.combine_description(description, location_details)
+            full_description = description # self.combine_description(description, location_details)
             event_dict = {
                 'Title': title,
                 "Description": full_description,
@@ -419,7 +455,8 @@ class Scraper(object):
                 'Photo URL': image,
                 "Group": sponsor,
                 "Invited Audience": invited_audience,
-                "Event Types": categories
+                "Event Types": categories,
+                "Location Details": location_details
             }
             event_list.append(event_dict)
         return event_list
@@ -770,7 +807,8 @@ def main():
         'Location','Address','City','State','Event Website','Room','Keywords','Tags',
         'Photo URL','Ticket URL','Cost','Hashtag','Facebook URL','Group','Department',
         'Allow User Activity','Allow User Attendance','Visibility','Featured Tabs',
-        'Sponsored','Venue Page Only','Exclude From Trending','Event Types','Invited Audience', 'Original URL'
+        'Sponsored','Venue Page Only','Exclude From Trending','Event Types','Invited Audience', 'Original URL',
+        'Location Details'
     ]
 
     # these are the group name column titles from the sample group import csv given by localist
